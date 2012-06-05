@@ -14,7 +14,7 @@ class GrabAndGoPlayer < AFHTTPClient
   
   #----------
   
-  attr_accessor :pumpURL, :saveURL, :activityManager, :_isDownloading, :_player
+  attr_accessor :pumpURL, :saveURL, :activityManager, :_isDownloading, :_player, :_timerProc, :_timer
   
   def player
     @_player ||= AVAudioPlayer.alloc.initWithContentsOfURL(@saveURL,error:nil)
@@ -33,8 +33,36 @@ class GrabAndGoPlayer < AFHTTPClient
     
     if self.player.playing?
       self.player.stop()
+      self._stopTimer()
     else
+      self._startTimer()
       self.player.play()
+    end
+  end
+  
+  #----------
+  
+  def registerTimerListener(&block)
+    self._timerProc = block
+    true
+  end
+  
+  def _timerFunc
+    if @_timerProc
+      @_timerProc.call(self.player)
+    end
+  end
+  
+  def _startTimer
+    if @_timerProc
+      @_timer = NSTimer.scheduledTimerWithTimeInterval(0.5, target:self, selector:"_timerFunc", userInfo:self.player, repeats:true)
+    end
+  end
+  
+  def _stopTimer
+    if @_timer
+      @_timer.invalidate
+      @_timer = nil
     end
   end
   

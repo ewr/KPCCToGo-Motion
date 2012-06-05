@@ -16,11 +16,14 @@ class MainViewController < UIViewController
     if !@player.hasAudio?
       @playView.alpha = 0
     end
+    
+    # register a timer listener to update play status
+    @player.registerTimerListener do |av|
+      @playProgress.progress = av.currentTime / av.duration
+    end
   end
   
   def prepareForSegue(segue, sender:sender)
-    puts "#{self.to_s}: CustomViewController1::prepareForSegue '#{segue.identifier}'"
-
     if segue.identifier == "showAlternate"
       optsView = segue.destinationViewController
       optsView.set_on_done(lambda do |view|
@@ -28,7 +31,6 @@ class MainViewController < UIViewController
       end)
     end
   end
-  
   
   #----------
   
@@ -41,8 +43,6 @@ class MainViewController < UIViewController
     
     @player.grab_audio(minutes:@defaults['duration'],topOfHour:@defaults['top_of_hour'],
       complete:lambda do
-        puts "complete!"
-        
         # re-enable the grab button
         sender.enabled = true
         
